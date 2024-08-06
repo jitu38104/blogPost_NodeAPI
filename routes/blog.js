@@ -126,7 +126,7 @@ router.delete("/delSingleBlog", (req, res) => {
     db.query(sql, (err, rows) => {
         if(err) res.status(500).json({ error: true, msg: err.message });
         else res.status(200).json({ error: false, msg: "successfully deleted" });        
-    })
+    });
 });
 
 
@@ -134,6 +134,22 @@ router.delete("/delSingleBlog", (req, res) => {
 router.post("/editorImageUploader", upload("editor").single("upload"), (req, res) => {
     const filePath = `${req.protocol}://${req.get('host')}/images/${req.file.filename}`;
     res.status(200).json({url: filePath});
+});
+
+
+//search blogs related query 
+router.get("/searchBlogs", (req, res) => {
+    const { query } = req.query;
+    const sql = `select blog_id, title, blog_image, content, category, sub_heading,
+    (select concat(first_name, ' ', last_name) from master_users where user_id=blogTable.author) as username,
+    (select category from master_category where catId=blogTable.category) as categoryName,
+    transaction_date, active from master_blogs as blogTable where sub_heading like '%${query}%' 
+    and active=1`;
+
+    db.query(sql, (err, rows) => {
+        if(err) res.status(500).json({ error: true, msg: err.message });
+        else res.status(200).json({ error: false, msg: "OK", result: rows });        
+    });
 });
 
 module.exports = router;
